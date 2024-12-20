@@ -1,9 +1,14 @@
 import { View, Text } from "react-native"
+import { Link } from "expo-router"
 
-export default function home(){
+
+export default function Home(){
   return (
-    <View>
-        <Text>Hello World</Text>
+    <View className="bg-whtie">
+        <Text className=" text-white">Hello World</Text>
+        <Link href={'/welcome'}>
+        How are you its been a while since i saw you
+        </Link>
     </View>
   )
 }
