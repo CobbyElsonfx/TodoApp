@@ -1,7 +1,7 @@
 // api.ts
 import axios from 'axios';
 
-export const API_URL = 'http://192.168.43.252:3000/todos';
+export const API_URL = 'http://127.0.0.1:8000/api/todos';
 
 // Fetch all todos
 export const fetchTodos = async () => {

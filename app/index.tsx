@@ -11,9 +11,9 @@ export default function HomePage() {
     const checkOnboardingStatus = async () => {
       const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
       if (hasSeenOnboarding === "true") {
-        router.replace("(tabs)"); // Navigate to the main tabs page
+        router.replace("../(tabs)"); // Navigate to the main tabs page
       } else {
-        router.replace("welcome"); // Navigate to the onboarding screen
+        router.replace("./welcome/index"); // Navigate to the onboarding screen
       }
     };
 
@@ -32,7 +32,7 @@ export default function HomePage() {
     <View className="flex-1 items-center justify-center bg-blue-500">
       <Text className="text-2xl font-bold text-white">Welcome to My App!</Text>
       <TouchableOpacity
-        onPress={() => router.replace("welcome")}
+        onPress={() => router.replace("./welcome/index")}
         className="mt-5 bg-white px-4 py-2 rounded-lg"
       >
         <Text className="text-blue-500 font-semibold">Go to Onboarding</Text>

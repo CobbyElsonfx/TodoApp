@@ -1,79 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { FlatList, Text, TextInput, View, TouchableOpacity } from "react-native";
+import { FlatList, Text, View, TextInput, TouchableOpacity } from "react-native";
+import { Picker} from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { fetchTodos } from "@/constants/api"; // Import your API service
-import { FontAwesome } from "@expo/vector-icons";
+import { Ionicons } from '@expo/vector-icons'; // For search icon
+import { useRouter, useLocalSearchParams } from "expo-router";
+
 
 function TodoList() {
-
-
-  const todosListAll = [
-    {
-      id: 1,
-      title: "Write Blog Post",
-      details:
-        "Write an in-depth blog post about web development trends in 2024.",
-      status: "in_progress",
-      created_at: "2024-12-19T10:00:00.000000Z",
-      updated_at: "2024-12-19T12:00:00.000000Z",
-    },
-    {
-      id: 2,
-      title: "Prepare Presentation",
-      details:
-        "Create slides for the upcoming team meeting on project updates.",
-      status: "not_started",
-      created_at: "2024-12-18T09:30:00.000000Z",
-      updated_at: null,
-    },
-    {
-      id: 3,
-      title: "Fix Website Bug",
-      details: "Resolve the issue with the contact form not sending emails.",
-      status: "completed",
-      created_at: "2024-12-17T15:45:00.000000Z",
-      updated_at: "2024-12-18T16:00:00.000000Z",
-    },
-    {
-      id: 4,
-      title: "learn today",
-      details: "Sample details",
-      status: "not_started",
-      created_at: "2024-12-11T10:50:27.000000Z",
-      updated_at: "2024-12-11T10:50:27.000000Z",
-    },
-    {
-      id: 5,
-      title: "Organize Workspace",
-      details:
-        "Declutter and reorganize the workspace for better productivity.",
-      status: "in_progress",
-      created_at: "2024-12-19T14:20:00.000000Z",
-      updated_at: "2024-12-19T14:45:00.000000Z",
-    },
-    {
-      id: 6,
-      title: "Plan Vacation",
-      details:
-        "Research destinations and create a travel itinerary for the new year.",
-      status: "not_started",
-      created_at: "2024-12-20T08:00:00.000000Z",
-      updated_at: null,
-    },
-  ]; 
-
-
+  const router = useRouter();
   const [todos, setTodos] = useState<any[]>([]); // Store todos
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
-  const [filter, setFilter] = useState<string>(""); // Filter state
   const [searchQuery, setSearchQuery] = useState<string>(""); // Search query
+  const [statusFilter, setStatusFilter] = useState<string>("all"); // Status filter
 
   useEffect(() => {
     const getTodos = async () => {
       try {
         const todos = await fetchTodos();
-        setTodos(todosListAll);
+        setTodos(todos);
       } catch (err) {
         setError("Failed to fetch todos. Please try again.");
       } finally {
@@ -83,10 +29,9 @@ function TodoList() {
     getTodos();
   }, []);
 
-  const filteredTodos = todos.filter((todo) => {
-    if (filter && todo.status !== filter) return false;
-    if (searchQuery && !todo.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
+  const filteredTodos = todos.filter(todo => {
+    if (statusFilter !== "all" && todo.status !== statusFilter) return false;
+    return todo.title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   if (loading) {
@@ -95,65 +40,99 @@ function TodoList() {
         colors={["#1253AA", "#05243E"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        className="flex-1 items-center justify-center"
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
       >
-        <Text className="text-white text-lg">Loading...</Text>
+        <Text style={{ color: 'white', fontSize: 18 }}>Loading...</Text>
       </LinearGradient>
     );
   }
 
   return (
     <LinearGradient
+    className="items-center"
       colors={["#1253AA", "#05243E"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
-      className="flex-1 items-center pt-10 px-4"
+      style={{ flex: 1, paddingTop: 20 }}
     >
-      {/* Top Inputs */}
-      <View className="w-full flex-row justify-between items-center mb-4">
+      {/* Top Row with Search and Filter */}
+      <View style={{ flexDirection: "row", justifyContent: "center", paddingHorizontal: 20, marginBottom: 20 }}>
         {/* Search Input */}
-        <View className="flex-row items-center bg-gradient-to-r from-blue-800 to-blue-900 rounded-md flex-1 mr-2 p-2">
-          <FontAwesome name="search" size={20} color="#FFF" />
-          <TextInput
-            placeholder="Search by title"
-            placeholderTextColor="#FFF"
-            className="ml-2 text-white flex-1"
-            value={searchQuery}
-            onChangeText={(text) => setSearchQuery(text)}
-          />
-        </View>
-
-        {/* Filter Dropdown */}
-        <View className="w-1/3 bg-gradient-to-r from-blue-800 to-blue-900 rounded-md p-2">
-          <TextInput
-            placeholder="Filter"
-            placeholderTextColor="#FFF"
-            className="text-white"
-            value={filter}
-            onChangeText={(text) => setFilter(text)}
-          />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search by title"
+          style={{
+            width: "65%",
+            backgroundColor: "#102D53", // Custom background color
+            paddingHorizontal: 15,
+            paddingVertical: 10,
+            borderRadius: 8,
+            color: "white",
+            fontSize: 16,
+            marginRight: 10,
+          }}
+        />
+        {/* Status Filter */}
+        <View style={{ width: "30%" }}>
+          <Picker
+            selectedValue={statusFilter}
+            onValueChange={setStatusFilter}
+            style={{
+              backgroundColor: "#102D53", // Custom background color
+              color: "white",
+              borderRadius: 8,
+              paddingHorizontal: 10,
+            }}
+          >
+            <Picker.Item label="All" value="all" />
+            <Picker.Item label="In Progress" value="in_progress" />
+            <Picker.Item label="Completed" value="completed" />
+            <Picker.Item label="Not Started" value="not_started" />
+          </Picker>
         </View>
       </View>
 
-      {/* Todo List */}
+      {/* Todo List Container */}
       <FlatList
+
         data={filteredTodos}
-        contentContainerStyle={{ paddingBottom: 20, alignItems: "center" }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center", // Center the list vertically
+          paddingBottom: 20,
+          height:"4%"
+          
+        }}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            className="w-11/12 bg-white rounded-lg p-4 my-2 shadow-md flex-row justify-between items-center"
+          <View
+            style={{
+              width: "90%",
+              backgroundColor: "white",
+              borderRadius: 12,
+              padding: 15,
+              marginVertical: 10,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 5,
+              elevation: 5,
+            }}
           >
-            <View>
-              <Text className="text-lg font-bold text-gray-800">
-                {item.title}
-              </Text>
-              <Text className="text-sm text-gray-600 truncate">
-                {item.description}
-              </Text>
-              <Text className="text-xs text-gray-400">{item.dateCreated}</Text>
-            </View>
-            <FontAwesome name="arrow-right" size={20} color="#888" />
-          </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#333" }}>
+              {item.title}
+            </Text>
+            <Text style={{ fontSize: 14, color: "#666", marginVertical: 5 }}>
+              {item.details}
+            </Text>
+            <Text style={{ fontSize: 12, color: "#999" }}>
+              Created at: {new Date(item.created_at).toLocaleDateString()}
+            </Text>
+            <TouchableOpacity onPress={() => router.push(`/todo/${item.id}`)} style={{ position: "absolute", right: 10, top: 10 }}>
+  <Ionicons name="arrow-forward" size={24} color="#05243E" />
+</TouchableOpacity>
+
+          </View>
         )}
         keyExtractor={(item) => item.id.toString()}
       />
