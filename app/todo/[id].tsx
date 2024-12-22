@@ -9,12 +9,12 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { API_URL } from "@/constants/api";
-import axios from "axios";
+import { fetchTodoById, deleteTodo, updateTodo } from "@/constants/api"; 
 
 export default function TodoDetails() {
   const { id } = useLocalSearchParams();
@@ -26,26 +26,28 @@ export default function TodoDetails() {
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
 
+  // Fetch the todo when the component mounts
   useEffect(() => {
     const fetchTodo = async () => {
       try {
-        const response = await axios.get(`${API_URL}/${id}`);
-        const data = response.data;
+        const data = await fetchTodoById(Number(id)); // Fetch todo by ID
         setTodo(data);
-        setTitle(data.title);
-        setDetails(data.details);
+        setTitle(data?.title);
+        setDetails(data?.description);
       } catch (error) {
         Alert.alert("Error", "Failed to fetch todo details.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchTodo();
   }, [id]);
 
-  const deleteTodo = async () => {
+  // Handle deleting the todo
+  const handleDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      await deleteTodo(Number(id)); // Delete todo by ID
       Alert.alert("Success", "Todo deleted successfully!");
       router.push("/todoList");
     } catch (error) {
@@ -53,9 +55,10 @@ export default function TodoDetails() {
     }
   };
 
-  const markAsCompleted = async () => {
+  // Mark the todo as completed
+  const handleMarkAsCompleted = async () => {
     try {
-      await axios.put(`${API_URL}/${id}`, { ...todo, status: "completed" });
+      await updateTodo(Number(id), { title, description: details }); // Update todo to mark as completed
       Alert.alert("Success", "Todo marked as completed!");
       setTodo({ ...todo, status: "completed" });
     } catch (error) {
@@ -63,15 +66,12 @@ export default function TodoDetails() {
     }
   };
 
+  // Handle updating the todo
   const handleUpdate = async () => {
     try {
-      await axios.put(`${API_URL}/${id}`, {
-        title,
-        details,
-        status: todo.status,
-      });
+      await updateTodo(Number(id), { title, description: details }); // Update todo with new values
       Alert.alert("Success", "Todo updated successfully!");
-      setTodo({ ...todo, title, details });
+      setTodo({ ...todo, title, description: details });
       setModalVisible(false);
     } catch (error) {
       Alert.alert("Error", "Failed to update the todo.");
@@ -81,6 +81,7 @@ export default function TodoDetails() {
   if (loading) {
     return (
       <LinearGradient colors={["#1253AA", "#05243E"]} style={styles.centered}>
+        <StatusBar barStyle="light-content" backgroundColor="#1253AA" />
         <Text style={{ color: "white", fontSize: 18 }}>Loading...</Text>
       </LinearGradient>
     );
@@ -88,6 +89,7 @@ export default function TodoDetails() {
 
   return (
     <LinearGradient colors={["#1253AA", "#05243E"]} style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1253AA" />
       {/* Back Button and Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -97,9 +99,8 @@ export default function TodoDetails() {
       </View>
 
       {/* Todo Details */}
-
       <View style={styles.content}>
-        <View >
+        <View>
           <View style={styles.contentInner}>
             <View style={styles.titleRow}>
               <Text style={styles.todoTitle}>{todo.title}</Text>
@@ -117,23 +118,19 @@ export default function TodoDetails() {
             {todo.details || "No description available."}
           </Text>
         </View>
-
       </View>
-      
-        {/* Action Buttons */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={deleteTodo}>
-            <Ionicons name="trash-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Delete</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={markAsCompleted}
-          >
-            <Ionicons name="checkmark-done-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Complete</Text>
-          </TouchableOpacity>
-        </View>
+
+      {/* Action Buttons */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
+          <Ionicons name="trash-outline" size={20} color="white" />
+          <Text style={styles.buttonText}>Delete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={handleMarkAsCompleted}>
+          <Ionicons name="checkmark-done-outline" size={20} color="white" />
+          <Text style={styles.buttonText}>Complete</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Modal for Update */}
       <Modal
@@ -184,10 +181,11 @@ export default function TodoDetails() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: 20 , marginTop: 30},
   headerTitle: { color: "white", fontSize: 20, marginLeft: 10 },
   content: {
     flex: 1,

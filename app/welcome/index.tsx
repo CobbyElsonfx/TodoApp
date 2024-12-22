@@ -45,7 +45,7 @@ export default function WelcomeScreen() {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
     } else {
       AsyncStorage.setItem("hasSeenOnboarding", "true");
-      router.replace("../(tabs)"); // Navigate to the main Todo page
+      router.replace("../(tabs)"); 
     }
   };
 
@@ -56,9 +56,7 @@ export default function WelcomeScreen() {
         source={item.image}
         style={{ width: 300, height: 200, resizeMode: "contain", marginBottom: 20 }}
       />
-      {/* Title */}
       <Text className="text-4xl font-bold text-white mb-4">{item.title}</Text>
-      {/* Description */}
       <Text className="text-lg text-center text-white leading-7 px-4">{item.description}</Text>
     </View>
   );
@@ -78,9 +76,9 @@ export default function WelcomeScreen() {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
         renderItem={renderSlide}
-        scrollEnabled={false} // Prevent manual swiping
+        scrollEnabled={false} 
       />
-      {/* Pagination and Next Button */}
+  
       <View style={{ position: "absolute", bottom: 30, width: "100%", alignItems: "center" }}>
         <View
           style={{
@@ -90,7 +88,7 @@ export default function WelcomeScreen() {
             width: "90%",
           }}
         >
-          {/* Slider Indicators */}
+          {/* slider bars  */}
           <View style={{ flexDirection: "row" }}>
             {slides.map((_, index) => (
               <View
@@ -105,7 +103,7 @@ export default function WelcomeScreen() {
               />
             ))}
           </View>
-          {/* Next Button */}
+          {/* button for the next page  */}
           <TouchableOpacity
             onPress={handleNext}
             style={{

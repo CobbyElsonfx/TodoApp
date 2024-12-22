@@ -9,44 +9,47 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInput
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { fetchTodos, createTodo } from "@/constants/api";
+import { fetchTodos, createTodo, Todo } from "@/constants/api"; 
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import TodoModal from "@/components/TodoModal";
 import TodoItem from "@/components/TodoItem";
 import { Picker } from "@react-native-picker/picker";
 
-function TodoList() {
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+const TodoList: React.FC = () => {
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
-  const [todos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newTodoTitle, setNewTodoTitle] = useState("");
-  const [newTodoDetails, setNewTodoDetails] = useState("");
-  const [newTodoStatus, setNewTodoStatus] = useState("not_started");
-  const [creatingTodo, setCreatingTodo] = useState(false);
+  const [todos, setTodos] = useState<Todo[]>([]); 
+  const [loading, setLoading] = useState<boolean>(true);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [newTodoTitle, setNewTodoTitle] = useState<string>("");
+  const [newTodoDetails, setNewTodoDetails] = useState<string>("");
+  const [newTodoStatus, setNewTodoStatus] = useState<string>("not_started");
+  const [creatingTodo, setCreatingTodo] = useState<boolean>(false);
+
+  const getTodos = async (): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const todos = await fetchTodos(); 
+      setTodos(todos);
+    } catch (err) {
+      setError("Unable to fetch todos. Please check your connection or try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const getTodos = async () => {
-      try {
-        const todos = await fetchTodos();
-        setTodos(todos);
-      } catch {
-        Alert.alert("Error", "Failed to fetch todos.");
-      } finally {
-        setLoading(false);
-      }
-    };
     getTodos();
   }, []);
 
-  const handleAddTodo = async () => {
+  const handleAddTodo = async (): Promise<void> => {
     if (!newTodoTitle.trim()) {
       Alert.alert("Validation Error", "Title is required.");
       return;
@@ -58,7 +61,7 @@ function TodoList() {
         details: newTodoDetails || null,
         status: newTodoStatus,
       });
-      setTodos([...todos, createdTodo]);
+      setTodos((prevTodos) => [...prevTodos, createdTodo]); // Avoid mutation by updating state immutably
       setModalVisible(false);
       setNewTodoTitle("");
       setNewTodoDetails("");
@@ -69,6 +72,11 @@ function TodoList() {
       setCreatingTodo(false);
     }
   };
+
+  const filteredTodos = todos.filter((todo) => {
+    if (statusFilter === "all") return true;
+    return todo.status === statusFilter;
+  });
 
   if (loading) {
     return (
@@ -82,40 +90,57 @@ function TodoList() {
     );
   }
 
+  if (error) {
+    return (
+      <LinearGradient
+        colors={["#1253AA", "#05243E"]}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}
+      >
+        <Ionicons name="alert-circle-outline" size={48} color="white" />
+        <Text style={{ color: "white", fontSize: 18, textAlign: "center", marginTop: 10 }}>
+          {error}
+        </Text>
+        <TouchableOpacity
+          onPress={getTodos}
+          style={{
+            marginTop: 20,
+            backgroundColor: "#1A3E5C",
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            borderRadius: 10,
+          }}
+        >
+          <Text style={{ color: "white", fontSize: 16 }}>Retry</Text>
+        </TouchableOpacity>
+      </LinearGradient>
+    );
+  }
+
   return (
     <LinearGradient
       colors={["#1253AA", "#05243E"]}
-      style={{ flex: 1, paddingHorizontal: 20 }}
+      style={{
+        flex: 1,
+        paddingHorizontal: 20,
+        paddingTop: 40, // Added padding for status bar space
+      }}
     >
       {/* Search and Filter Container */}
-      <View
-        style={{
-          width: "100%", // Adjusted width to 100% for responsiveness
-          flexDirection: "row",
-          alignItems: "center",
-          marginTop: 20, // Added margin bottom for spacing
-          paddingHorizontal: 10,
-          flexWrap: "wrap", // Allows wrapping of elements on smaller screens
-        }}
-      >
-        {/* Enhanced Search Bar */}
+      <View style={{ marginBottom: 20 }}>
         <View
           style={{
+            marginBottom: 12,
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: "#1A3E5C",
             borderRadius: 30,
-            paddingHorizontal: 5,
+            paddingHorizontal: 16,
             paddingVertical: 12,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.2,
             shadowRadius: 6,
-            marginTop: "1rem",
-            elevation: 5, // for Android shadow
-            flex: 1, // Allow search bar to take full width
-            marginBottom: 12, // Added margin bottom for spacing between search and filter
-            maxWidth: 400, // Restrict the max width for search bar
+            elevation: 5,
           }}
         >
           <Ionicons name="search" size={22} color="#fff" />
@@ -128,28 +153,26 @@ function TodoList() {
               flex: 1,
               marginLeft: 12,
               color: "#fff",
-              fontSize: 13,
+              fontSize: 16,
               fontFamily: "System",
             }}
           />
         </View>
 
-        {/* Enhanced Filter Dropdown */}
         <View
           style={{
+            marginTop: 8,
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: "#1A3E5C",
             borderRadius: 30,
-            paddingHorizontal: 5,
+            paddingHorizontal: 16,
             paddingVertical: 10,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.2,
             shadowRadius: 6,
             elevation: 5,
-            flex: 1, // Allow filter dropdown to take full width
-            maxWidth: 200, // Restrict max width for dropdown
           }}
         >
           <Picker
@@ -170,39 +193,38 @@ function TodoList() {
             <Picker.Item label="Completed" value="completed" />
             <Picker.Item label="Not Started" value="not_started" />
           </Picker>
-     
         </View>
       </View>
 
       {/* Todo List Container */}
-      <View
-        style={{
-          flex: 1,
-          marginTop: 20,
-        }}
-      >
-        <Text style={{ fontSize: 20, fontWeight: "bold", color: "white", marginBottom: 8 }}>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "bold",
+            color: "white",
+            marginBottom: 8,
+          }}
+        >
           List of Todo's
         </Text>
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-            {todos.length === 0 ? (
+            {filteredTodos.length === 0 ? (
               <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <Ionicons name="document-text-outline" size={48} color="#fff" />
                 <Text style={{ color: "white", fontSize: 18, marginTop: 10 }}>No todos found</Text>
               </View>
             ) : (
-              <View style={{ maxHeight: "60%", justifyContent: "center" }}>
-                <FlatList
-                  data={todos}
-                  keyExtractor={(item) => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <TodoItem todo={item} onPress={() => router.push(`/todo/${item.id}`)} />
-                  )}
-                  style={{ flex: 1 }}
-                />
-              </View>
+              <FlatList
+                data={filteredTodos}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TodoItem todo={item} onPress={() => router.push(`/todo/${item.id}`)} />
+                )}
+                style={{ flex: 1 }}
+              />
             )}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -246,6 +268,6 @@ function TodoList() {
       />
     </LinearGradient>
   );
-}
+};
 
 export default TodoList;

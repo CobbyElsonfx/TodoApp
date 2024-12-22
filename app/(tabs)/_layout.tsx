@@ -10,33 +10,30 @@ export default function TabLayout() {
     <>
      {/* Ensure the Status Bar is visible */}
      <StatusBar
-        barStyle="light-content" // Use "dark-content" for light backgrounds
-        translucent={true} // Make it transparent
-        backgroundColor="transparent" // Background color matches app
+        barStyle="light-content"
+        translucent={true} 
+        backgroundColor="transparent" 
       />
        <LinearGradient
-      colors={["#05243E", "#05243E"]} // Solid dark blue background
+      colors={["#05243E", "#05243E"]} 
       style={{ flex: 1 }}
     >
       <Tabs
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: "#05243E", // Dark blue background
-            borderTopWidth: 0, // Remove the border at the top of the tab bar
-            elevation: 0, // Remove any shadow or elevation
-            shadowOpacity: 0, // Ensure no shadow
-            height: 70, // Adjust height for better usability
+            backgroundColor: "#05243E", 
+            borderTopWidth: 0, 
+            elevation: 0, 
+            shadowOpacity: 0,
+            height: 70, 
           },
-          sceneContainerStyle: {
-            backgroundColor: "#05243E", // Match background color to remove the line
-          },
-          tabBarActiveTintColor: "white", // White color for active icon
-          tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)", // Subtle white for inactive icon
+          tabBarActiveTintColor: "white",
+          tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)", 
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: "600",
-            marginBottom: 5, // Add margin to ensure labels are visible
+            marginBottom: 5, 
           },
           tabBarIconStyle: {
             marginTop: -5, // Move icons slightly up

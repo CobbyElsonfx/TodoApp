@@ -13,13 +13,11 @@ import {
   Animated,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
-import { API_URL } from "@/constants/api";
+import { useRouter } from "expo-router";
+import { fetchTodos } from "@/constants/api";  // Import the fetchTodos function
 
 const todoBackground = require("../../assets/images/welc.png");
-
 
 export default function Home() {
   const [completedTasks, setCompletedTasks] = useState([]);
@@ -44,8 +42,8 @@ export default function Home() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await axios.get(`${API_URL}`);
-        const tasks = response.data;
+        // Use fetchTodos to get the tasks
+        const tasks = await fetchTodos();
 
         const completed = tasks.filter((task: any) => task.status === "completed");
         const uncompleted = tasks.filter((task: any) => task.status !== "completed");
@@ -154,7 +152,6 @@ export default function Home() {
             }}
           />
           <View>
-          
             <Text style={styles.greeting}>{greeting()}, {user.name}</Text>
             <Text
               style={{
@@ -168,7 +165,7 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Notification Bell Section */}
+        {/* Notification bell */}
         <View style={{ position: "relative" }}>
           <Ionicons
             name="notifications-outline"
@@ -195,7 +192,6 @@ export default function Home() {
         </View>
       </View>
 
-      {/* Background Image Section */}
       <ImageBackground
           source={todoBackground}
           style={styles.backgroundImage}
@@ -213,48 +209,44 @@ export default function Home() {
           </LinearGradient>
         </ImageBackground>
 
-      {/* Completed Tasks Section */}
+      {/* All complted  Tasks Section */}
       <Text style={{ fontSize: 20, fontWeight: "bold", color: "white", marginBottom: 8 }}>
         Completed Tasks
       </Text>
-    <View style={{ maxHeight: 200 }}> 
-  <FlatList
-    data={completedTasks}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={({ item }) => renderTaskCard(item, true)}
-    ListEmptyComponent={
-      <Text style={{ color: "#333", textAlign: "center", fontSize: 14 }}>
-        No completed tasks found.
-      </Text>
-    }
-  /></View>
-
+      <View style={{ maxHeight: 200 }}>
+        <FlatList
+          data={completedTasks}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => renderTaskCard(item, true)}
+          ListEmptyComponent={
+            <Text style={{ color: "#333", textAlign: "center", fontSize: 14 }}>
+              No completed tasks found.
+            </Text>
+          }
+        />
+      </View>
 
       {/* Uncompleted Tasks Section */}
-      <Text style={{ fontSize: 20, fontWeight: "bold", color: "white",  marginTop: 24, marginBottom: 8 }}>
+      <Text style={{ fontSize: 20, fontWeight: "bold", color: "white", marginTop: 24, marginBottom: 8 }}>
         Uncompleted Tasks
       </Text>
-      <View style={{ maxHeight: 100 }}> {/* Reduced height for completed tasks */}
-
-      <FlatList
-        data={uncompletedTasks}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => renderTaskCard(item, false)}
-        ListEmptyComponent={
-          <Text style={{ color: "#333", textAlign: "center", fontSize: 14 }}>
-            No uncompleted tasks found.
-          </Text>
-        }
-      />
-    </View>
-
+      <View style={{ maxHeight: 100 }}>
+        <FlatList
+          data={uncompletedTasks}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => renderTaskCard(item, false)}
+          ListEmptyComponent={
+            <Text style={{ color: "#333", textAlign: "center", fontSize: 14 }}>
+              No uncompleted tasks found.
+            </Text>
+          }
+        />
+      </View>
     </LinearGradient>
   );
 }
 
-
 const styles = StyleSheet.create({
-
   greeting: { fontSize: 16, color: "#FFD700", fontWeight: "600" },
   backgroundImage: {
     width: "100%",
@@ -288,6 +280,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-
- 
 });

@@ -93,8 +93,14 @@ function RootLayoutNav() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="todo/[id]"
+          options={{
+            headerShown: false, // Disable the header for todo details page
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );
 }
-3;
+
