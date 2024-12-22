@@ -8,8 +8,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  TextInput,
+  TextInput
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { fetchTodos, createTodo, Todo } from "@/constants/api"; 
@@ -22,14 +21,18 @@ import { Picker } from "@react-native-picker/picker";
 const TodoList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
   const [todos, setTodos] = useState<Todo[]>([]); 
   const [loading, setLoading] = useState<boolean>(true);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [newTodoTitle, setNewTodoTitle] = useState<string>("");
+
   const [newTodoDetails, setNewTodoDetails] = useState<string>("");
+
   const [newTodoStatus, setNewTodoStatus] = useState<string>("not_started");
+
   const [creatingTodo, setCreatingTodo] = useState<boolean>(false);
 
   const getTodos = async (): Promise<void> => {
@@ -61,7 +64,7 @@ const TodoList: React.FC = () => {
         details: newTodoDetails || null,
         status: newTodoStatus,
       });
-      setTodos((prevTodos) => [...prevTodos, createdTodo]); // Avoid mutation by updating state immutably
+      setTodos((prevTodos) => [...prevTodos, createdTodo]); 
       setModalVisible(false);
       setNewTodoTitle("");
       setNewTodoDetails("");
@@ -210,23 +213,19 @@ const TodoList: React.FC = () => {
         </Text>
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-            {filteredTodos.length === 0 ? (
+          <FlatList
+            data={filteredTodos}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TodoItem todo={item} onPress={() => router.push(`/todo/${item.id}`)} />
+            )}
+            ListEmptyComponent={
               <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <Ionicons name="document-text-outline" size={48} color="#fff" />
                 <Text style={{ color: "white", fontSize: 18, marginTop: 10 }}>No todos found</Text>
               </View>
-            ) : (
-              <FlatList
-                data={filteredTodos}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                  <TodoItem todo={item} onPress={() => router.push(`/todo/${item.id}`)} />
-                )}
-                style={{ flex: 1 }}
-              />
-            )}
-          </ScrollView>
+            }
+          />
         </KeyboardAvoidingView>
       </View>
 
