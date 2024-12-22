@@ -1,75 +1,130 @@
-import React, { useState, useEffect } from "react";
-import { FlatList, Text, View } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, FlatList, Dimensions, ListRenderItem, TouchableOpacity, Image } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { fetchTodos } from "@/constants/api"; // Import your API service
+import { Ionicons } from "@expo/vector-icons";
 
-function TodoList() {
-  const [todos, setTodos] = useState<any[]>([]); // Store todos
-  const [loading, setLoading] = useState<boolean>(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+type Slide = {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+};
 
-  useEffect(() => {
-    const getTodos = async () => {
-      try {
-        const todos = await fetchTodos();
-        setTodos(todos);
-      } catch (err) {
-        setError("Failed to fetch todos. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    getTodos();
-  }, []);
+const slides: Slide[] = [
+  {
+    id: "1",
+    title: "Track Your Progress",
+    description: "Organize your tasks efficiently and stay productive!",
+    image: require("../../assets/images/shield.png"),
+  },
+  {
+    id: "2",
+    title: "PLAN",
+    description: "Plan your tasks to do, that way you’ll stay organized and you won’t skip any",
+    image: require("../../assets/images/plan.png"),
+  },
+  {
+    id: "3",
+    title: "Stay Organized",
+    description: "Make a full schedule for the whole week and stay organized and productive all days",
+    image: require("../../assets/images/calendar.png"),
+  },
+];
 
-  if (loading) {
-    return (
-      <LinearGradient
-        colors={["#1253AA", "#05243E"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        className="flex-1 items-center justify-center"
-      >
-        <Text className="text-white text-lg">Loading...</Text>
-      </LinearGradient>
-    );
-  }
+export default function WelcomeScreen() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<FlatList<Slide>>(null);
+  const router = useRouter();
+  const { width } = Dimensions.get("window");
 
-  if (error) {
-    return (
-      <LinearGradient
-        colors={["#1253AA", "#05243E"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        className="flex-1 items-center justify-center"
-      >
-        <Text className="text-red-400 text-lg">{error}</Text>
-      </LinearGradient>
-    );
-  }
+  const handleNext = () => {
+    if (currentIndex < slides.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+    } else {
+      AsyncStorage.setItem("hasSeenOnboarding", "true");
+      router.replace("../(tabs)"); // Navigate to the main Todo page
+    }
+  };
+
+  const renderSlide: ListRenderItem<Slide> = ({ item }) => (
+    <View style={{ width, alignItems: "center", justifyContent: "center", padding: 20 }}>
+      {/* Image */}
+      <Image
+        source={item.image}
+        style={{ width: 300, height: 200, resizeMode: "contain", marginBottom: 20 }}
+      />
+      {/* Title */}
+      <Text className="text-4xl font-bold text-white mb-4">{item.title}</Text>
+      {/* Description */}
+      <Text className="text-lg text-center text-white leading-7 px-4">{item.description}</Text>
+    </View>
+  );
 
   return (
     <LinearGradient
       colors={["#1253AA", "#05243E"]}
+      style={{ flex: 1 }}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
-      className="flex-1 items-center pt-10"
     >
       <FlatList
-        data={todos}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        renderItem={({ item }) => (
-          <View className="w-11/12 bg-white rounded-lg p-4 my-2 shadow-md">
-            <Text className="text-lg font-bold text-gray-800 mb-2">
-              {item.title}
-            </Text>
-            <Text className="text-sm text-gray-600">{item.description}</Text>
-          </View>
-        )}
-        keyExtractor={(item) => item.id.toString()}
+        data={slides}
+        ref={flatListRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.id}
+        renderItem={renderSlide}
+        scrollEnabled={false} // Prevent manual swiping
       />
+      {/* Pagination and Next Button */}
+      <View style={{ position: "absolute", bottom: 30, width: "100%", alignItems: "center" }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "90%",
+          }}
+        >
+          {/* Slider Indicators */}
+          <View style={{ flexDirection: "row" }}>
+            {slides.map((_, index) => (
+              <View
+                key={index}
+                style={{
+                  height: 4,
+                  width: currentIndex === index ? 30 : 10,
+                  backgroundColor: "white",
+                  marginHorizontal: 5,
+                  borderRadius: 2,
+                }}
+              />
+            ))}
+          </View>
+          {/* Next Button */}
+          <TouchableOpacity
+            onPress={handleNext}
+            style={{
+              backgroundColor: "white",
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {currentIndex === slides.length - 1 ? (
+              <Ionicons name="checkmark" size={30} color="#1253AA" />
+            ) : (
+              <Ionicons name="arrow-forward" size={24} color="#1253AA" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
     </LinearGradient>
   );
 }
-
-export default TodoList;

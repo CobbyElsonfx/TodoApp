@@ -1,7 +1,7 @@
 // api.ts
 import axios from 'axios';
 
-export const API_URL = 'http://127.0.0.1:8000/api/todos';
+export const API_URL = 'https://63b3-41-215-163-178.ngrok-free.app/api/todos';
 
 // Fetch all todos
 export const fetchTodos = async () => {

@@ -59,7 +59,7 @@ const TodoList =({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: 'normal', marginBottom: 16 },
   filters: { flexDirection: 'row', marginBottom: 16 },
   filterButton: { marginHorizontal: 8, color: 'blue' },
   taskItem: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#ccc' },
