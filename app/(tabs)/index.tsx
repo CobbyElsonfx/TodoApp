@@ -1,30 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
   ActivityIndicator,
   Image,
-  Alert,
   TouchableOpacity,
   ImageBackground,
-  ScrollView,
   StyleSheet,
   Animated,
+  SafeAreaView
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchTodosThunk } from "@/store/todoSlice"; // Redux action for fetching todos
 import { useRouter } from "expo-router";
-import { fetchTodos } from "@/constants/api";  // Import the fetchTodos function
+import { RootState, AppDispatch } from "@/store/store"; // Assuming RootState and AppDispatch are defined in the store
 
 const todoBackground = require("../../assets/images/welc.png");
 
 export default function Home() {
-  const [completedTasks, setCompletedTasks] = useState([]);
-  const [uncompletedTasks, setUncompletedTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
-  const fadeAnim = new Animated.Value(0); // Animation for the cards
+  const fadeAnim = React.useRef(new Animated.Value(0)).current; // Use ref for animation value
+
+  const { todos, loading, error } = useSelector((state: RootState) => state.todos);
 
   const user = {
     name: "Cobby",
@@ -40,30 +41,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        // Use fetchTodos to get the tasks
-        const tasks = await fetchTodos();
+    // Dispatch the Redux action to fetch tasks
+    dispatch(fetchTodosThunk());
 
-        const completed = tasks.filter((task: any) => task.status === "completed");
-        const uncompleted = tasks.filter((task: any) => task.status !== "completed");
-
-        setCompletedTasks(completed);
-        setUncompletedTasks(uncompleted);
-      } catch (error) {
-        Alert.alert("Error", "Failed to fetch tasks. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
+    // Start fade animation
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [dispatch]);
 
   const navigateToDetails = (task: any) => {
     router.push(`/todo/${task.id}`);
@@ -73,9 +60,7 @@ export default function Home() {
     return (
       <LinearGradient
         colors={["#1253AA", "#05243E"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        style={styles.loadingContainer}
       >
         <ActivityIndicator size="large" color="#FFFFFF" />
         <Text style={{ color: "white", marginTop: 16 }}>Loading tasks...</Text>
@@ -83,37 +68,29 @@ export default function Home() {
     );
   }
 
+  if (error) {
+    return (
+      <LinearGradient
+        colors={["#1253AA", "#05243E"]}
+        style={styles.loadingContainer}
+      >
+        <Text style={{ color: "red", marginTop: 16 }}>Error: {error}</Text>
+      </LinearGradient>
+    );
+  }
+
+  // Separate completed and uncompleted tasks
+  const completedTasks = todos.filter((task) => task.status === "completed");
+  const uncompletedTasks = todos.filter((task) => task.status !== "completed");
+
   const renderTaskCard = (item: any, isCompleted: boolean) => (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "white",
-        padding: 16,
-        borderRadius: 8,
-        marginBottom: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
-      }}
-    >
+    <View style={styles.taskCard}>
       {isCompleted && (
-        <Ionicons
-          name="checkmark-circle"
-          size={20}
-          color="green"
-          style={{ marginRight: 12 }}
-        />
+        <Ionicons name="checkmark-circle" size={20} color="green" style={styles.taskIcon} />
       )}
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 16, fontWeight: "600", color: "#333" }}>
-          {item.title}
-        </Text>
-        <Text style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-          Created on: {item.createdAt}
-        </Text>
+      <View style={styles.taskContent}>
+        <Text style={styles.taskTitle}>{item.title}</Text>
+        <Text style={styles.taskSubtitle}>Created on: {item.createdAt}</Text>
       </View>
       <TouchableOpacity onPress={() => navigateToDetails(item)}>
         <Ionicons name="arrow-forward" size={20} color="#333" />
@@ -124,130 +101,122 @@ export default function Home() {
   return (
     <LinearGradient
       colors={["#1253AA", "#05243E"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      style={{ flex: 1, paddingHorizontal: 16, paddingTop: 24 }}
+      style={styles.container}
     >
       {/* Header Section */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          paddingHorizontal: 8,
-        }}
-      >
+      <View style={styles.header}>
         {/* User Info Section */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Image
-            source={{ uri: user.profilePic }}
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              marginRight: 16,
-              borderWidth: 2,
-              borderColor: "white",
-            }}
-          />
+        <View style={styles.userInfo}>
+          <Image source={{ uri: user.profilePic }} style={styles.profilePic} />
           <View>
             <Text style={styles.greeting}>{greeting()}, {user.name}</Text>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "400",
-                color: "rgba(255, 255, 255, 0.8)",
-              }}
-            >
-              {user.email}
-            </Text>
+            <Text style={styles.userEmail}>{user.email}</Text>
           </View>
         </View>
 
-        {/* Notification bell */}
-        <View style={{ position: "relative" }}>
-          <Ionicons
-            name="notifications-outline"
-            size={32}
-            color="#FFD700"
-          />
-          <View
-            style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              backgroundColor: "red",
-              borderRadius: 10,
-              width: 20,
-              height: 20,
-              justifyContent: "center",
-              alignItems: "center",
-              borderWidth: 1,
-              borderColor: "white",
-            }}
-          >
-            <Text style={{ color: "white", fontSize: 12, fontWeight: "bold" }}>2</Text>
+        {/* Notification Bell */}
+        <View style={styles.notificationBell}>
+          <Ionicons name="notifications-outline" size={32} color="#FFD700" />
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationText}>2</Text>
           </View>
         </View>
       </View>
 
-      <ImageBackground
-          source={todoBackground}
-          style={styles.backgroundImage}
-          imageStyle={{ borderRadius: 12 }}
-        >
-          <LinearGradient
-            colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.8)"]}
-            style={styles.overlay}
-          >
-            <Text style={styles.backgroundText}>Stay Organized</Text>
-            <Text style={styles.backgroundSubText}>Keep track of your tasks</Text>
-            <TouchableOpacity style={styles.getStartedButton}>
-              <Text style={styles.getStartedText}>Get Started</Text>
-            </TouchableOpacity>
-          </LinearGradient>
-        </ImageBackground>
+      {/* Background Image Section */}
+      <ImageBackground source={todoBackground} style={styles.backgroundImage} imageStyle={{ borderRadius: 12 }}>
+        <LinearGradient colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.8)"]} style={styles.overlay}>
+          <Text style={styles.backgroundText}>Stay Organized</Text>
+          <Text style={styles.backgroundSubText}>Keep track of your tasks</Text>
+          <TouchableOpacity style={styles.getStartedButton}>
+            <Text >Get Started</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </ImageBackground>
 
-      {/* All complted  Tasks Section */}
-      <Text style={{ fontSize: 20, fontWeight: "bold", color: "white", marginBottom: 8 }}>
-        Completed Tasks
-      </Text>
-      <View style={{ maxHeight: 200 }}>
-        <FlatList
-          data={completedTasks}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => renderTaskCard(item, true)}
-          ListEmptyComponent={
-            <Text style={{ color: "#333", textAlign: "center", fontSize: 14 }}>
-              No completed tasks found.
-            </Text>
-          }
-        />
-      </View>
+      {/* Completed Tasks Section */}
+      <Text style={styles.sectionTitle}>Completed Tasks</Text>
+      <FlatList
+        data={completedTasks}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => renderTaskCard(item, true)}
+        ListEmptyComponent={<Text style={styles.emptyMessage}>No completed tasks found.</Text>}
+      />
 
       {/* Uncompleted Tasks Section */}
-      <Text style={{ fontSize: 20, fontWeight: "bold", color: "white", marginTop: 24, marginBottom: 8 }}>
-        Uncompleted Tasks
-      </Text>
-      <View style={{ maxHeight: 100 }}>
-        <FlatList
-          data={uncompletedTasks}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => renderTaskCard(item, false)}
-          ListEmptyComponent={
-            <Text style={{ color: "#333", textAlign: "center", fontSize: 14 }}>
-              No uncompleted tasks found.
-            </Text>
-          }
-        />
-      </View>
+      <Text style={[styles.sectionTitle, styles.uncompletedSectionTitle]}>Uncompleted Tasks</Text>
+      <FlatList
+        data={uncompletedTasks}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => renderTaskCard(item, false)}
+        ListEmptyComponent={<Text style={styles.emptyMessage}>No uncompleted tasks found.</Text>}
+      />
     </LinearGradient>
   );
 }
 
+
 const styles = StyleSheet.create({
-  greeting: { fontSize: 16, color: "#FFD700", fontWeight: "600" },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 60,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profilePic: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  greeting: {
+    fontSize: 16,
+    color: "#FFD700",
+    fontWeight: "600",
+  },
+  userEmail: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "rgba(255, 255, 255, 0.8)",
+  },
+  notificationBell: {
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "red",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "white",
+  },
+  notificationText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
   backgroundImage: {
     width: "100%",
     height: 250,
@@ -279,5 +248,48 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 8,
+  },
+  uncompletedSectionTitle: {
+    marginTop: 24,
+  },
+  taskCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  taskIcon: {
+    marginRight: 12,
+  },
+  taskContent: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  taskSubtitle: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 4,
+  },
+  emptyMessage: {
+    color: "#333",
+    textAlign: "center",
+    fontSize: 14,
   },
 });

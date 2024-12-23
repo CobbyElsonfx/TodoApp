@@ -13,11 +13,13 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "../styles/global.css";
+import { Provider } from "react-redux"; 
+import { store } from "../store/store"; 
 
 import { useColorScheme } from "@/components/useColorScheme";
 
 export {
-  // Catch any errors thrown by the Layout component.
+
   ErrorBoundary,
 } from "expo-router";
 
@@ -45,7 +47,11 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <Provider store={store}>
+      <RootLayoutNav />
+    </Provider>
+  );
 }
 
 function RootLayoutNav() {
@@ -78,11 +84,11 @@ function RootLayoutNav() {
         <Stack.Screen
           name="index"
           options={{
-            headerShown: false, // Homepage doesn't need a header
+            headerShown: false, 
           }}
         />
         <Stack.Screen
-          name="welcome"
+          name="welcome/index"
           options={{
             headerShown: false,
           }}
@@ -96,7 +102,7 @@ function RootLayoutNav() {
         <Stack.Screen
           name="todo/[id]"
           options={{
-            headerShown: false, // Disable the header for todo details page
+            headerShown: false, 
           }}
         />
       </Stack>

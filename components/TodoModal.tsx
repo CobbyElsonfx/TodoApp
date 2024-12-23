@@ -150,10 +150,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: "#E0E0E0",
     borderWidth: 1,
+    minHeight: 50, // Ensure the container has a visible height
+    justifyContent: "center", // Center the picker inside
   },
   picker: {
     flex: 1,
     color: "#05243E",
+    height: 40, // Add an explicit height
+
   },
   submitButton: {
     paddingVertical: 12,
