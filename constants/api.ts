@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 // Define the base URL for the API
-export const API_URL = 'https://63b3-41-215-163-178.ngrok-free.app/api/todos';
+export const API_URL = '';
 
 // Define the Todo interface to match the API response
 export interface Todo {
