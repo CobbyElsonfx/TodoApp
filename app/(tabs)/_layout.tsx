@@ -1,53 +1,85 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import React from "react";
+import { FontAwesome } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons"; // For additional icons
+import { Tabs } from "expo-router";
+import { StatusBar } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}   
-              </Pressable>
-            </Link>
-          ),
-        }}
+    <>
+     {/* Ensure the Status Bar is visible */}
+     <StatusBar
+        barStyle="light-content"
+        translucent={true} 
+        backgroundColor="transparent" 
       />
-  
-    </Tabs>
+       <LinearGradient
+      colors={["#05243E", "#05243E"]} 
+      style={{ flex: 1 }}
+    >
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: "#05243E", 
+            borderTopWidth: 0, 
+            elevation: 0, 
+            shadowOpacity: 0,
+            height: 70, 
+          },
+          tabBarActiveTintColor: "white",
+          tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)", 
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: "600",
+            marginBottom: 5, 
+          },
+          tabBarIconStyle: {
+            marginTop: -5, // Move icons slightly up
+          },
+          tabBarItemStyle: {
+            paddingVertical: 5,
+          },
+        }}
+      >
+        {/* Home Tab */}
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="home-outline" size={24} color={color} />
+            ),
+          }}
+        />
+
+        {/* TodoList Tab */}
+        <Tabs.Screen
+          name="todoList"
+          options={{
+            title: "Todo List",
+            tabBarIcon: ({ color }) => (
+              <FontAwesome name="list" size={24} color={color} />
+            ),
+          }}
+        />
+
+        {/* Calendar Tab */}
+        <Tabs.Screen
+          name="calendar"
+          options={{
+            title: "Calendar",
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="calendar-outline" size={24} color={color} />
+            ),
+          }}
+        />
+
+        
+      </Tabs>
+    </LinearGradient>
+    </>
+   
   );
 }
